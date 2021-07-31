@@ -32,11 +32,13 @@
 
 #include "linkkit_solo.h"
 #include "factory_restore.h"
-#include "lightbulb.h"
+#include "hal_motor.h"
 
 #include "conn_mgr.h"
 
-#include "user_key.h"
+#include "hal_key.h"
+#include "transport_uart.h"
+#include "alilocaltime.h"
 
 static const char *TAG = "app main";
 
@@ -47,10 +49,9 @@ static esp_err_t wifi_event_handle(void *ctx, system_event_t *event)
     switch (event->event_id) {
         case SYSTEM_EVENT_STA_GOT_IP:
             if (linkkit_started == false) {
-                xTaskCreate((void (*)(void *))linkkit_main, "lightbulb", 10240, NULL, 5, NULL);
+                xTaskCreate((void (*)(void *))linkkit_main, "feeder", 10240, NULL, 5, NULL);
                 linkkit_started = true;
             }
-
             break;
 
         default:
@@ -186,15 +187,18 @@ void app_main()
 {
     //factory_restore_init();
 
-    //lightbulb_init();
+    motorInit();
 	key_gpio_init(user_key_handle);
+	transport_uart_handle_init();
 
     conn_mgr_init();
     conn_mgr_register_wifi_event(wifi_event_handle);
 
     iotx_event_regist_cb(linkkit_event_monitor);    // awss callback
 
-    IOT_SetLogLevel(IOT_LOG_DEBUG);
+    IOT_SetLogLevel(IOT_LOG_INFO);
+	
+	ali_localtime_init();
 
     conn_mgr_start();
 }

@@ -21,69 +21,18 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-#ifndef _LIGHTBULB_H_
-#define _LIGHTBULB_H_
+#ifndef _HAL_MOTOR_H_
+#define _HAL_MOTOR_H_
 
 #include <stdbool.h>
 
-/**
- * @brief initialize the lightbulb lowlevel module
- *
- * @param none
- *
- * @return none
- */
-void lightbulb_init(void);
+ /*SUPPORT UP TO 8 PWM CHANNEL*/
+#define PWM_CHANNEL_NUM_MAX 8 
+/*Define the channel number of PWM*/
+#define PWM_CHANNEL	        2
 
-/**
- * @brief deinitialize the lightbulb's lowlevel module
- *
- * @param none
- *
- * @return none
- */
-void lightbulb_deinit(void);
 
-/**
- * @brief turn on/off the lowlevel lightbulb
- *
- * @param value The "On" value
- *
- * @return none
- */
-int lightbulb_set_on(bool value);
-
-/**
- * @brief set the saturation of the lowlevel lightbulb
- *
- * @param value The Saturation value
- *
- * @return 
- *     - 0 : OK
- *     - others : fail
- */
-int lightbulb_set_saturation(float value);
-
-/**
- * @brief set the hue of the lowlevel lightbulb
- *
- * @param value The Hue value
- *
- * @return 
- *     - 0 : OK
- *     - others : fail
- */
-int lightbulb_set_hue(float value);
-
-/**
- * @brief set the brightness of the lowlevel lightbulb
- *
- * @param value The Brightness value
- *
- * @return 
- *     - 0 : OK
- *     - others : fail
- */
-int lightbulb_set_brightness(int value);
+void  motorControl(int8_t status);
+void  motorInit(void);
 
 #endif /* _LIGHTBULB_H_ */

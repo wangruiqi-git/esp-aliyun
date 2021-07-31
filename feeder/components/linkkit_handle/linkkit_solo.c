@@ -27,8 +27,13 @@ int HAL_Snprintf(char *str, const int len, const char *fmt, ...);
     #include "at_api.h"
 #endif
 
-#include "lightbulb.h"
+#include "hal_motor.h"
 #include "esp_log.h"
+
+//wrq shan
+#include "lwip/apps/sntp.h"
+
+#include "alilocaltime.h"
 
 static const char* TAG = "linkkit_example_solo";
 
@@ -62,6 +67,7 @@ char DEVICE_NAME[IOTX_DEVICE_NAME_LEN + 1] = {0};
 char DEVICE_SECRET[IOTX_DEVICE_SECRET_LEN + 1] = {0};
 
 static user_example_ctx_t g_user_example_ctx;
+
 
 /** Awss Status event callback */
 static int user_awss_status_event_handler(int status)
@@ -139,11 +145,12 @@ static int user_trigger_event_reply_event_handler(const int devid, const int msg
 static int user_property_set_event_handler(const int devid, const char *request, const int request_len)
 {
     int res = 0;
-    cJSON *root = NULL, *LightSwitch = NULL, *LightColor = NULL;
+    cJSON *root = NULL;
+	cJSON *LocalTimer = NULL;
+	cJSON *Timer = NULL, *manualFeeding = NULL, *Enable = NULL;
+
     ESP_LOGI(TAG,"Property Set Received, Devid: %d, Request: %s", devid, request);
     
-    lightbulb_set_brightness(78);
-    lightbulb_set_saturation(100);
     
     if (!request) {
         return NULL_VALUE_ERROR;
@@ -157,27 +164,79 @@ static int user_property_set_event_handler(const int devid, const char *request,
     }
 
     /** Switch Lightbulb On/Off   */
-    LightSwitch = cJSON_GetObjectItem(root, "LightSwitch");
-    if (LightSwitch) {
-        lightbulb_set_on(LightSwitch->valueint);
-    } 
+    LocalTimer = cJSON_GetObjectItem(root, "LocalTimer");
+    if (LocalTimer) {
+        if(cJSON_IsArray(LocalTimer)==true)
+        {
+#if 0
+			cJSON *element;
+			int i_g_localtime_config=0;
+        	cJSON_ArrayForEach(element, LocalTimer)
+        	{
+        	    ali_localtime_config_t *p_l_c=(ali_localtime_config_t *)g_localtime_config;
+				Timer = cJSON_GetObjectItem(element, "Timer");
+				char *p; 
+				p = strtok(Timer->valuestring, " ");
+				char *pp[time_attr_num]={0};
+				int i_Timer_val=0;
+				while(p)
+				{
+					ESP_LOGI(TAG,"%s\n", p);
+					pp[i_Timer_val]=p;
+					p = strtok(NULL, " ");
+					i_Timer_val++;
+				}
+				if(i_Timer_val < time_attr_num-1) continue;
+				//time_attr[0] parase
+				p_l_c[i_g_localtime_config].time_attr[on_min]=atoi(pp[on_min]);
+				//time_attr[1] parase
+				p_l_c[i_g_localtime_config].time_attr[on_hour]=atoi(pp[on_hour]);
+				//time_attr[4] parase
+				char *p2; 
+				p2 = strtok(pp[on_weekday], ",");
+				p_l_c[i_g_localtime_config].time_attr[on_weekday]=0;
+				while(p2)
+				{
+					ESP_LOGI(TAG,"%s\n", p2);
+					if(*p2=='*')
+						break;
+					p_l_c[i_g_localtime_config].time_attr[on_weekday]|=1<<(atoi(p2)-1);
+					p2 = strtok(NULL, ",");
+				}
+				ESP_LOGI(TAG,"time_attr[3] %d\n", p_l_c[i_g_localtime_config].time_attr[on_weekday]);
 
-    /** Switch Lightbulb Hue */
-    LightSwitch = cJSON_GetObjectItem(root, "RGBColor");
-    if (LightSwitch) {
-        LightColor = cJSON_GetObjectItem(LightSwitch, "Red");
-        lightbulb_set_hue(LightColor ? LightColor->valueint : 0);
-        LightColor = cJSON_GetObjectItem(LightSwitch, "Green");
-        lightbulb_set_hue(LightColor ? LightColor->valueint : 120);
-        LightColor = cJSON_GetObjectItem(LightSwitch, "Blue");
-        lightbulb_set_hue(LightColor ? LightColor->valueint : 240);
-    }
+				manualFeeding = cJSON_GetObjectItem(element, "manualFeeding");
+				p_l_c[i_g_localtime_config].action=manualFeeding->valueint;
+
+				Enable = cJSON_GetObjectItem(element, "Enable");
+				p_l_c[i_g_localtime_config].enable=Enable->valueint;
+
+				i_g_localtime_config++;
+        	}
+					#endif
+        }
+		ali_localtime_set();
+
+    } 
     
     cJSON_Delete(root);
 
     res = IOT_Linkkit_Report(EXAMPLE_MASTER_DEVID, ITM_MSG_POST_PROPERTY,
                              (unsigned char *)request, request_len);
     ESP_LOGI(TAG,"Post Property Message ID: %d", res);
+
+	{
+		// wait for time to be set
+		time_t now = 0;
+		struct tm timeinfo = { 0 };
+		char strftime_buf[64];
+
+		time(&now);
+		localtime_r(&now, &timeinfo);
+		
+		strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+		ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", strftime_buf);
+	}
 
     return SUCCESS_RETURN;
 }

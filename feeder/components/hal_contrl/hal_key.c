@@ -15,7 +15,7 @@
 #include "esp_log.h"
 #include "esp_system.h"
 
-#include "user_key.h"
+#include "hal_key.h"
 
 /*********************************************************************
 * TYPEDEFS
@@ -116,7 +116,7 @@ static void key_task_handler(void *arg)
 	ESP_LOGI("KEY","gpio_task_example");
     for (;;) {
         if (xQueueReceive(key_evt_queue, &event, portMAX_DELAY)) {
-            		//接收到消息，调用回调函数,在回调函数中对不同的按键类型进行处理
+            	//接收到消息，调用回调函数,在回调函数中对不同的按键类型进行处理
 			if(pfnKeyClickCallback != NULL)
 				pfnKeyClickCallback(event);	
         }

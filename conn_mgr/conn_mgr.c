@@ -144,9 +144,21 @@ static esp_err_t conn_mgr_obtain_time(void)
             vTaskDelay(sntp_retry_time / portTICK_RATE_MS);
         } else {
             ESP_LOGI(TAG,"SNTP get time success\n");
+			    // Set timezone to China Standard Time
+			setenv("TZ", "CST-8", 1);
+			tzset();
+		    // wait for time to be set
+		    time_t now = 0;
+		    struct tm timeinfo = { 0 };
+			char strftime_buf[64];
+	        time(&now);
+	        localtime_r(&now, &timeinfo);
+			
+			strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+			ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", strftime_buf);
             break;
         }
-    }
+	}
 
     get_time_flag = true;
 

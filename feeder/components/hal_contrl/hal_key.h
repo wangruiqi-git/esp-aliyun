@@ -1,3 +1,6 @@
+#ifndef _HAL_KEY_H_
+#define _HAL_KEY_H_
+
 #include "driver/gpio.h"
 
 
@@ -27,4 +30,4 @@ typedef void (*key_click_cb_t)(uint8_t event);
 
 void key_gpio_init(key_click_cb_t cb);
 
-
+#endif
