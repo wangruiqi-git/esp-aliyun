@@ -216,8 +216,12 @@ static int user_property_set_event_handler(const int devid, const char *request,
 					#endif
         }
 		ali_localtime_set();
-
     } 
+	
+	manualFeeding = cJSON_GetObjectItem(root, "manualFeeding");
+	if (manualFeeding) {
+		motorControl_timer(10,manualFeeding->valueint);
+	}
     
     cJSON_Delete(root);
 

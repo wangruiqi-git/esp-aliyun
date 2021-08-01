@@ -4,8 +4,8 @@
 .cproject
 
 # IDF compile output
-examples/*/build/*
-examples/*/*/build/*
+feeder/build/*
+feeder/*/build/*
 
 # config
 sdkconfig

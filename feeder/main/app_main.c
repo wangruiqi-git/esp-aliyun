@@ -40,6 +40,9 @@
 #include "transport_uart.h"
 #include "alilocaltime.h"
 
+//wrq shan
+#include "cron_paras.h"
+
 static const char *TAG = "app main";
 
 static bool linkkit_started = false;
@@ -201,4 +204,5 @@ void app_main()
 	ali_localtime_init();
 
     conn_mgr_start();
+
 }

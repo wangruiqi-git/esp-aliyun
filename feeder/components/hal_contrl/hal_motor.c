@@ -23,7 +23,9 @@
  */
 #include <stdio.h>
 #include <sdkconfig.h>
- 
+
+#include "FreeRTOS.h"
+#include "freertos/timers.h"
 #ifdef CONFIG_IDF_TARGET_ESP8266
 #include "driver/pwm.h"
 #endif
@@ -66,6 +68,9 @@ const uint32_t motor_pin_num[PWM_IO_NUM] = {
 
 #endif
 
+static TimerHandle_t  xOneShotTimer;
+
+
 /******************************************************************************
  * FunctionName : user_light_set_duty
  * Description  : set each channel's duty params
@@ -104,7 +109,7 @@ void  motorControl(int8_t status)
 {
 	if((MOTOR_MIN_INPUT > status) || (MOTOR_MAX_INPUT < status))
     {
-        
+        return;
     }
 
     if(status == 0)
@@ -121,6 +126,24 @@ void  motorControl(int8_t status)
     }
 
 }
+
+void  motorControl_timer(int8_t status,int8_t run_second)
+{
+	motorControl(status);
+	xTimerStop(xOneShotTimer,0);
+	xTimerChangePeriod(xOneShotTimer,
+						pdMS_TO_TICKS(run_second*1000),
+						pdMS_TO_TICKS(1000) );
+	xTimerStart(xOneShotTimer,pdMS_TO_TICKS(1000));
+}
+
+
+void motorStop( TimerHandle_t xTimer )
+{
+	motorControl(0);
+	xTimerStop(xTimer,0);
+}
+
 // phase table, (phase/180)*depth
 int16_t phase[PWM_CHANNEL] = {0, 0};
 void  motorInit(void)
@@ -134,6 +157,18 @@ void  motorInit(void)
     /*PIN FUNCTION INIT FOR PWM OUTPUT*/
     pwm_init(motorParam.period, pwm_duty_init, PWM_CHANNEL, motor_pin_num);
 	pwm_set_phases(phase);
+
+	xOneShotTimer = xTimerCreate(
+						/* 定时器的名称 */
+						"OneShot",
+						/* 定时周期 */
+						3333,
+						/* 设置为pdFALSE表示一次性定时器 */
+						pdFALSE,
+						/* ID初始为0 */
+						0,
+						/* 回调函数 */
+						motorStop);
 
     return;
 }

@@ -21,20 +21,40 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-#ifndef _HAL_MOTOR_H_
-#define _HAL_MOTOR_H_
-
+#ifndef _CRON_PARAS_H__
+#define _CRON_PARAS_H__
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <stdbool.h>
 
- /*SUPPORT UP TO 8 PWM CHANNEL*/
-#define PWM_CHANNEL_NUM_MAX 8 
-/*Define the channel number of PWM*/
-#define PWM_CHANNEL	        2
+typedef struct CronLine {
+	char cl_Dow[7];                 /* 0-6, beginning sunday */
+	char cl_Mons[12];               /* 0-11 */
+	char cl_Hrs[24];                /* 0-23 */
+	char cl_Days[32];               /* 1-31 */
+	char cl_Mins[60];               /* 0-59 */
+} CronLine;
 
 
-void  motorControl(int8_t status);
-void  motorControl_timer(int8_t status,int8_t run_second);
+#define CRON_ATTR_NUM 6
 
-void  motorInit(void);
 
-#endif /* _LIGHTBULB_H_ */
+bool cron_str_to_struct(CronLine *cron_item, char *ptr ,char *delims);
+
+
+#if 0
+
+char str[]="3 1 * * *";
+CronLine cron_item={0};
+cron_str_to_struct(&cron_item, str," ");
+CronLine cron_item2={0};
+char str2[]="3 1 * * 1,2,3,4,5,6,7";
+cron_str_to_struct(&cron_item2, str2," ");
+
+
+cron_str_to_time_t
+struct_to_time_t
+#endif
+
+#endif
