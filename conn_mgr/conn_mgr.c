@@ -47,6 +47,8 @@
 
 #include "conn_mgr.h"
 
+#include "hal_DS1302.h"
+
 #define STA_SSID_KEY             "ssid"
 #define STA_PASSWORD_KEY         "pswd"
 
@@ -156,6 +158,8 @@ static esp_err_t conn_mgr_obtain_time(void)
 			
 			strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
 			ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", strftime_buf);
+			
+			ds1302_syn_systime(0);
             break;
         }
 	}

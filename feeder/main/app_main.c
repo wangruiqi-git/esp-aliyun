@@ -40,6 +40,9 @@
 #include "transport_uart.h"
 #include "alilocaltime.h"
 
+#include "hal_DS1302.h"
+#include "freertos/timers.h"
+
 //wrq shan
 #include "cron_paras.h"
 
@@ -186,6 +189,21 @@ void user_key_handle(uint8_t event)
 	factory_restore_handle_butten();
 
 }
+void printtest( TimerHandle_t xTimer )
+{
+	struct ds1302struct lcTime;
+	ds1302_read_time(&lcTime,1);//获取时钟的时间
+			//打印 年 月 日 时 分 秒
+	ESP_LOGI(TAG,"\nyear=%d,mon=%d,mday=%d,hour=%d,min=%d,sec=%d\n",
+					lcTime.tm_year,
+					lcTime.tm_mon,
+					lcTime.tm_mday,
+					lcTime.tm_hour,
+					lcTime.tm_min,
+					lcTime.tm_sec
+					);
+}
+
 void app_main()
 {
     //factory_restore_init();
@@ -203,6 +221,23 @@ void app_main()
 	
 	ali_localtime_init();
 
+	ds1302_gpio_init();
+	ds1302_syn_systime(1);
+
     conn_mgr_start();
+	
+
+	TimerHandle_t  testtimmer = xTimerCreate(
+						/* 定时器的名称 */
+						"OneShot",
+						/* 定时周期 */
+						1000/portTICK_RATE_MS,
+						/* 设置为pdFALSE表示一次性定时器 */
+						pdTRUE,
+						/* ID初始为0 */
+						0,
+						/* 回调函数 */
+						printtest);
+    xTimerStart(testtimmer,pdMS_TO_TICKS(1000));
 
 }

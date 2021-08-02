@@ -9,8 +9,7 @@
 */
 #define GPIO_INPUT_IO_0     GPIO_NUM_0
 #define GPIO_INPUT_PIN0_SEL  (1ULL<<GPIO_INPUT_IO_0)
-#define GPIO_INPUT_IO_14     GPIO_NUM_14
-#define GPIO_INPUT_PIN14_SEL  (1ULL<<GPIO_INPUT_IO_14)
+
 
 //定义事件类型
 #define KEY_GPIO_LL_PRESS_EVT		0x01	//超长按事件
