@@ -43,6 +43,8 @@
 #include "hal_DS1302.h"
 #include "freertos/timers.h"
 
+#include "hal_led.h"
+
 //wrq shan
 #include "cron_paras.h"
 
@@ -191,17 +193,7 @@ void user_key_handle(uint8_t event)
 }
 void printtest( TimerHandle_t xTimer )
 {
-	struct ds1302struct lcTime;
-	ds1302_read_time(&lcTime,1);//获取时钟的时间
-			//打印 年 月 日 时 分 秒
-	ESP_LOGI(TAG,"\nyear=%d,mon=%d,mday=%d,hour=%d,min=%d,sec=%d\n",
-					lcTime.tm_year,
-					lcTime.tm_mon,
-					lcTime.tm_mday,
-					lcTime.tm_hour,
-					lcTime.tm_min,
-					lcTime.tm_sec
-					);
+
 }
 
 void app_main()
@@ -223,6 +215,8 @@ void app_main()
 
 	ds1302_gpio_init();
 	ds1302_syn_systime(1);
+
+	led_gpio_init(NULL,0);
 
     conn_mgr_start();
 	
