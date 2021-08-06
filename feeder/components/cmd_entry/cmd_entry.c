@@ -34,6 +34,7 @@
 #include "cmd_entry.h"
 #include "hal_motor.h"
 #include "hal_led.h"
+#include "hal_ir.h"
 
 
 static const char *TAG = "cmd_entry";
@@ -50,6 +51,7 @@ static const char *TAG = "cmd_entry";
 #define SET_LOG_LEVEL             "setlog"
 #define MOTOR             "motor"
 #define LEDTEST             "led"
+#define IRTEST             "ir"
 
 static bool s_conn_mgr_exist = false;
 #if 0
@@ -130,6 +132,26 @@ void app_get_input_param(char *param, size_t param_len)
 		int mode = atoi(buf);
 		led_work_mode_set(mode);
 
+        return;
+	}
+	else if(strstr(param, IRTEST)){
+		uint32_t len = 0;
+        char buf[64 + 1] = {0};
+
+        char *input = param + strlen(IRTEST) + 1;
+        app_get_config_input_len(input, &len);
+        strncpy(buf, input, len);
+        ESP_LOGI(TAG, "IRTEST: %s", buf);
+		int mode = atoi(buf);
+		if(mode==0)
+		{
+			start_count();
+			ESP_LOGI(TAG, "IRTEST"); 
+		}
+		else
+		{
+			ESP_LOGI(TAG, "IRTEST: %d", get_count()); 
+		}
         return;
 	}
 	else {

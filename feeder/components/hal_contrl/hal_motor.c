@@ -23,6 +23,7 @@
  */
 #include <stdio.h>
 #include <sdkconfig.h>
+#include "driver/gpio.h"
 
 #include "FreeRTOS.h"
 #include "freertos/timers.h"
@@ -48,8 +49,8 @@ struct pwm_param motorParam;
 //#define MOTOR_MAX_DUTY      (PWM_PERIOD * 1000 / 45)  //1KHz(1000 us) PWM， duty 范围是： 0 ~ 22222
 #define MOTOR_MIN_DUTY      0
 
-#define MCU_D6 12
-#define MCU_D7 13
+#define MCU_D6 GPIO_NUM_12
+#define MCU_D7 GPIO_NUM_13
 
 #define MOTO_IO_1 MCU_D6
 #define MOTO_IO_2 MCU_D7

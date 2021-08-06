@@ -7,8 +7,8 @@
 /*********************************************************************
 * MACROS
 */
-#define GPIO_INPUT_IO_0     GPIO_NUM_0
-#define GPIO_INPUT_PIN0_SEL  (1ULL<<GPIO_INPUT_IO_0)
+#define GPIO_KEY1_IO     GPIO_NUM_0
+#define GPIO_KEY1_PIN_SEL  (1ULL<<GPIO_KEY1_IO)
 
 
 //定义事件类型

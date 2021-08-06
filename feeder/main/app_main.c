@@ -44,6 +44,7 @@
 #include "freertos/timers.h"
 
 #include "hal_led.h"
+#include "hal_ir.h"
 
 //wrq shan
 #include "cron_paras.h"
@@ -217,6 +218,8 @@ void app_main()
 	ds1302_syn_systime(1);
 
 	led_gpio_init(NULL,0);
+	
+	ir_gpio_init();
 
     conn_mgr_start();
 	

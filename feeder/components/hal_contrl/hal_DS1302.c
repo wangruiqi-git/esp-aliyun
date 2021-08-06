@@ -36,7 +36,8 @@
 #include "driver/gpio.h"
 #include "rom/ets_sys.h"
 
-
+#include "esp_log.h"
+static const char *TAG = "DS1302";
 
 
 //初始化引脚,移植其它单片机请替换内部函数
@@ -47,7 +48,7 @@ void ds1302_gpio_init(void)
 	//设置为输出模式
 	io_conf.mode = GPIO_MODE_OUTPUT;
 	//管脚的位
-	io_conf.pin_bit_mask = GPIO_INPUT_PIN4_SEL|GPIO_INPUT_PIN5_SEL|GPIO_INPUT_PIN14_SEL;
+	io_conf.pin_bit_mask = GPIO_DAT_PIN_SEL|GPIO_CLK_PIN_SEL|GPIO_RST_PIN_SEL;
 	io_conf.pull_down_en = 1;
 	io_conf.pull_up_en = 1;
 	gpio_config(&io_conf);
@@ -68,34 +69,34 @@ void ds1302_clk_set(char HL)
 {
     if(HL==1)
         //GPIO_OUTPUT_SET(BIT0<<DS1302_CLK_GPIO, 1);
-        gpio_set_level(GPIO_CLK_IO_5, 1);
+        gpio_set_level(GPIO_CLK_IO, 1);
     else
         //GPIO_OUTPUT_SET(DS1302_CLK_GPIO, 0);
-        gpio_set_level(GPIO_CLK_IO_5, 0);
+        gpio_set_level(GPIO_CLK_IO, 0);
 }
 //设置RST引脚输出高低电平,移植其它单片机请替换内部函数
 void ds1302_rst_set(char HL)
 {
     if(HL==1)
         //GPIO_OUTPUT_SET(DS1302_RST_GPIO, 1);
-		gpio_set_level(GPIO_RST_IO_14, 1);
+		gpio_set_level(GPIO_RST_IO, 1);
     else
         //GPIO_OUTPUT_SET(DS1302_RST_GPIO, 0);
-		gpio_set_level(GPIO_RST_IO_14, 0);
+		gpio_set_level(GPIO_RST_IO, 0);
 }
 //设置数据引脚输出高低电平,移植其它单片机请替换内部函数
 void ds1302_dat_set(char HL){
     if(HL==1)
         //GPIO_OUTPUT_SET(DS1302_DAT_GPIO, 1);
-		gpio_set_level(GPIO_DAT_IO_4, 1);
+		gpio_set_level(GPIO_DAT_IO, 1);
     else
         //GPIO_OUTPUT_SET(DS1302_DAT_GPIO, 0);
-		gpio_set_level(GPIO_DAT_IO_4, 0);
+		gpio_set_level(GPIO_DAT_IO, 0);
 }
 
 //获取数据引脚的高低电平,移植其它单片机请替换内部函数
 char ds1302_dat_get(){
-    return gpio_get_level(GPIO_DAT_IO_4);
+    return gpio_get_level(GPIO_DAT_IO);
 }
 
 
@@ -108,7 +109,7 @@ char ds1302_dat_get(){
 * @example
 **/
 void ds1302_write_byte(char data){
-	gpio_set_direction(GPIO_DAT_IO_4, GPIO_MODE_OUTPUT);
+	gpio_set_direction(GPIO_DAT_IO, GPIO_MODE_OUTPUT);
 
     char i=0;
 
@@ -141,7 +142,7 @@ void ds1302_write_byte(char data){
 * @example
 **/
 char ds1302_read_byte(){
-	gpio_set_direction(GPIO_DAT_IO_4, GPIO_MODE_INPUT);
+	gpio_set_direction(GPIO_DAT_IO, GPIO_MODE_INPUT);
 
     char i=0, temp=0;
 
@@ -428,6 +429,12 @@ bool ds1302_syn_systime(bool bdirection)
     	settimeofday(&tv, NULL);
 		setenv("TZ", "CST-8", 1);
 		tzset();
+
+
+		char strftime_buf[64];
+		strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+		ESP_LOGI(TAG, "GET date/time FROM DS1302 is: %s", strftime_buf);
+		
 	}
 	else//to ds1302
 	{
