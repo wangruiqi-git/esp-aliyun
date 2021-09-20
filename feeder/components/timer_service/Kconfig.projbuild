@@ -1,0 +1,35 @@
+menu "[Aliyun]timer_services"
+
+	config AOS_TIMER_SERVICE
+		bool "USE AOS TIMER SERVICES"
+		default "y"
+		help
+			"HELP INFO"
+			
+	config ENABLE_COUNTDOWN
+		bool "CONFIG_ENABLE_COUNTDOWN"
+		default "n"
+		help
+			"HELP INFO"
+
+	config ENABLE_COUNTDOWN_LIST
+		bool "CONFIG_ENABLE_COUNTDOWN_LIST"
+		default "n"
+		help
+			"HELP INFO"
+	config ENABLE_LOCALTIMER
+		bool "CONFIG_ENABLE_LOCALTIMER"
+		default "y"
+		help
+			"cron type timer"
+	config ENABLE_PERIOD_TIMER
+		bool "CONFIG_ENABLE_PERIOD_TIMER"
+		default "n"
+		help
+			"HELP INFO"
+	config ENABLE_RANDOM_TIMER
+		bool "CONFIG_ENABLE_RANDOM_TIMER"
+		default "n"
+		help
+			"HELP INFO"
+endmenu

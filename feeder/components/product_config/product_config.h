@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define IOTX_LOCALTIME_CONF_LEN          (128)
+#define IOTX_LOCALTIME_CONF_LEN          (1024)
 
 ///////////config
 /**
@@ -35,10 +35,10 @@
  * @return  the actual length of product key
  */
 
-int HAL_GetLocalTimeConf(char LocalTimeConf[IOTX_LOCALTIME_CONF_LEN + 1]);
+int HAL_GetLocalTimerConf(char LocalTimeConf[IOTX_LOCALTIME_CONF_LEN + 1]);
 
 
-int HAL_SetLocalTimeConf(char *LocalTimeConf);
+int HAL_SetLocalTimerConf(char *LocalTimeConf);
 
 
 

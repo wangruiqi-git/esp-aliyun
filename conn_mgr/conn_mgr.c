@@ -145,19 +145,21 @@ static esp_err_t conn_mgr_obtain_time(void)
             ESP_LOGI(TAG,"SNTP get time failed, retry after %d ms\n", sntp_retry_time);
             vTaskDelay(sntp_retry_time / portTICK_RATE_MS);
         } else {
+			time_t now = 0;
+		    struct tm timeinfo = { 0 };
+			char strftime_buf[64];
             ESP_LOGI(TAG,"SNTP get time success\n");
-			    // Set timezone to China Standard Time
+			
+			// Set timezone to China Standard Time
 			setenv("TZ", "CST-8", 1);
 			tzset();
 		    // wait for time to be set
-		    time_t now = 0;
-		    struct tm timeinfo = { 0 };
-			char strftime_buf[64];
+		    //NTP give UTC time stamp ,user select timezone,make localtime
 	        time(&now);
 	        localtime_r(&now, &timeinfo);
 			
 			strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-			ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", strftime_buf);
+			ESP_LOGI(TAG, "The current date/time in Shanghai is: %s  timet:%ld", strftime_buf,now);
 			
 			ds1302_syn_systime(0);
             break;
@@ -175,6 +177,7 @@ static esp_err_t conn_mgr_wifi_event_loop_handler(void *ctx, system_event_t *eve
     switch (event->event_id) {
         case SYSTEM_EVENT_STA_GOT_IP:
             conn_mgr_save_wifi_config();
+			
             #if CONFIG_SSL_USING_WOLFSSL
             conn_mgr_obtain_time();
             #endif

@@ -43,7 +43,7 @@ static const char *TAG = "product_config";
 
 static bool s_part_init_flag;
 
-static esp_err_t HAL_ProductParam_init(void)
+static esp_err_t HAL_ProductCfgParam_init(void)
 {
     esp_err_t ret = ESP_OK;
 
@@ -61,14 +61,14 @@ static esp_err_t HAL_ProductParam_init(void)
     return ret;
 }
 
-static int HAL_GetProductParam(char *param_name, const char *param_name_str)
+static int HAL_GetProductCfgParam(char *param_name, const char *param_name_str)
 {
     esp_err_t ret;
     size_t read_len = 0;
     nvs_handle handle;
 
     do {
-        if (HAL_ProductParam_init() != ESP_OK) {
+        if (HAL_ProductCfgParam_init() != ESP_OK) {
             break;
         }
 
@@ -106,14 +106,14 @@ static int HAL_GetProductParam(char *param_name, const char *param_name_str)
 }
 
 
-static int HAL_SetProductParam(char *param_name, const char *param_name_str)
+static int HAL_SetProductCfgParam(char *param_name, const char *param_name_str)
 {
     esp_err_t ret;
     size_t write_len = 0;
     nvs_handle handle;
 
     do {
-        if (HAL_ProductParam_init() != ESP_OK) {
+        if (HAL_ProductCfgParam_init() != ESP_OK) {
             break;
         }
 
@@ -154,14 +154,16 @@ static int HAL_SetProductParam(char *param_name, const char *param_name_str)
  * @return  the actual length of product key
  */
 
-int HAL_GetLocalTimeConf(char LocalTimeConf[IOTX_LOCALTIME_CONF_LEN + 1])
+int HAL_GetLocalTimerConf(char LocalTimeConf[IOTX_LOCALTIME_CONF_LEN + 1])
 {
-    return HAL_GetProductParam(LocalTimeConf, "LocalTimeConf");
+	size_t write_len = HAL_GetProductCfgParam(LocalTimeConf, "LocalTimer");
+	//ESP_LOGE(TAG, "HAL_GetLocalTimerConf:%s", LocalTimeConf);
+    return write_len;
 }
 
-int HAL_SetLocalTimeConf(char *LocalTimeConf)
+int HAL_SetLocalTimerConf(char *LocalTimeConf)
 {
-    return HAL_SetProductParam(LocalTimeConf, "LocalTimeConf");
+    return HAL_SetProductCfgParam(LocalTimeConf, "LocalTimer");
 }
 
 

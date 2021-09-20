@@ -41,7 +41,7 @@
 #define TRANSPORT_UART_BAUD_RATE          115200
 #else
 #define TRANSPORT_UART_TASK_SIZE          2 * 1024
-#define TRANSPORT_UART_BAUD_RATE          115200
+#define TRANSPORT_UART_BAUD_RATE          76800
 #endif
 #define TRANSPORT_EX_UART_NUM                          UART_NUM_0
 

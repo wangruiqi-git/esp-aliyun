@@ -30,10 +30,11 @@ int HAL_Snprintf(char *str, const int len, const char *fmt, ...);
 #include "hal_motor.h"
 #include "esp_log.h"
 
+#include "iot_export_timer.h"
+
 //wrq shan
 #include "lwip/apps/sntp.h"
 
-#include "alilocaltime.h"
 
 static const char* TAG = "linkkit_example_solo";
 
@@ -147,7 +148,7 @@ static int user_property_set_event_handler(const int devid, const char *request,
     int res = 0;
     cJSON *root = NULL;
 	cJSON *LocalTimer = NULL;
-	cJSON *Timer = NULL, *manualFeeding = NULL, *Enable = NULL;
+	cJSON *manualFeeding = NULL;
 
     ESP_LOGI(TAG,"Property Set Received, Devid: %d, Request: %s", devid, request);
     
@@ -166,56 +167,7 @@ static int user_property_set_event_handler(const int devid, const char *request,
     /** Switch Lightbulb On/Off   */
     LocalTimer = cJSON_GetObjectItem(root, "LocalTimer");
     if (LocalTimer) {
-        if(cJSON_IsArray(LocalTimer)==true)
-        {
-#if 0
-			cJSON *element;
-			int i_g_localtime_config=0;
-        	cJSON_ArrayForEach(element, LocalTimer)
-        	{
-        	    ali_localtime_config_t *p_l_c=(ali_localtime_config_t *)g_localtime_config;
-				Timer = cJSON_GetObjectItem(element, "Timer");
-				char *p; 
-				p = strtok(Timer->valuestring, " ");
-				char *pp[time_attr_num]={0};
-				int i_Timer_val=0;
-				while(p)
-				{
-					ESP_LOGI(TAG,"%s\n", p);
-					pp[i_Timer_val]=p;
-					p = strtok(NULL, " ");
-					i_Timer_val++;
-				}
-				if(i_Timer_val < time_attr_num-1) continue;
-				//time_attr[0] parase
-				p_l_c[i_g_localtime_config].time_attr[on_min]=atoi(pp[on_min]);
-				//time_attr[1] parase
-				p_l_c[i_g_localtime_config].time_attr[on_hour]=atoi(pp[on_hour]);
-				//time_attr[4] parase
-				char *p2; 
-				p2 = strtok(pp[on_weekday], ",");
-				p_l_c[i_g_localtime_config].time_attr[on_weekday]=0;
-				while(p2)
-				{
-					ESP_LOGI(TAG,"%s\n", p2);
-					if(*p2=='*')
-						break;
-					p_l_c[i_g_localtime_config].time_attr[on_weekday]|=1<<(atoi(p2)-1);
-					p2 = strtok(NULL, ",");
-				}
-				ESP_LOGI(TAG,"time_attr[3] %d\n", p_l_c[i_g_localtime_config].time_attr[on_weekday]);
-
-				manualFeeding = cJSON_GetObjectItem(element, "manualFeeding");
-				p_l_c[i_g_localtime_config].action=manualFeeding->valueint;
-
-				Enable = cJSON_GetObjectItem(element, "Enable");
-				p_l_c[i_g_localtime_config].enable=Enable->valueint;
-
-				i_g_localtime_config++;
-        	}
-					#endif
-        }
-		ali_localtime_set();
+        timer_service_property_set(request);
     } 
 	
 	manualFeeding = cJSON_GetObjectItem(root, "manualFeeding");
@@ -252,10 +204,113 @@ static int user_property_desired_get_reply_event_handler(const char *serviceid, 
     return SUCCESS_RETURN;
 }
 
-static int user_property_get_event_handler(const int devid, const char *serviceid, const int serviceid_len, char **response, int *response_len)
-{
-    ESP_LOGI(TAG,"Get Property Message ID: %d", devid);
 
+static int user_property_get_event_handler(const int devid, const char *request, const int request_len, char **response,
+        int *response_len)
+{
+    cJSON *request_root = NULL, *item_propertyid = NULL;
+    cJSON *response_root = NULL;
+
+    ESP_LOGI(TAG, "Property Get Received, Devid: %d, Request: %s", devid, request);
+    request_root = cJSON_Parse(request);
+    if (request_root == NULL || !cJSON_IsArray(request_root)) {
+        ESP_LOGI(TAG, "JSON Parse Error");
+        return -1;
+    }
+
+    response_root = cJSON_CreateObject();
+    if (response_root == NULL) {
+        ESP_LOGI(TAG, "No Enough Memory");
+        cJSON_Delete(request_root);
+        return -1;
+    }
+
+    for (int index = 0; index < cJSON_GetArraySize(request_root); index++) {
+        item_propertyid = cJSON_GetArrayItem(request_root, index);
+        if (item_propertyid == NULL || !cJSON_IsString(item_propertyid)) {
+            ESP_LOGI(TAG, "JSON Parse Error");
+            cJSON_Delete(request_root);
+            cJSON_Delete(response_root);
+            return -1;
+        }
+        ESP_LOGI(TAG, "Property ID, index: %d, Value: %s", index, item_propertyid->valuestring);
+
+		if (strcmp("manualFeeding", item_propertyid->valuestring) == 0) {
+            //cJSON_AddNumberToObject(response_root, "manualFeeding", user_example_ctx->power_switch);
+        }
+#ifdef CONFIG_AOS_TIMER_SERVICE
+        if (strcmp("LocalTimer", item_propertyid->valuestring) == 0) {
+            char *local_timer_str = NULL;
+
+            if (NULL != (local_timer_str = timer_service_property_get("[\"LocalTimer\"]"))) {
+                ESP_LOGI(TAG, "local_timer %s", local_timer_str);
+                cJSON *property = NULL, *value = NULL;
+
+                property = cJSON_Parse(local_timer_str);
+                if (property == NULL) {
+                    ESP_LOGI(TAG, "No Enough Memory");
+                    continue;
+                }
+                value = cJSON_GetObjectItem(property, "LocalTimer");
+                if (value == NULL) {
+                    ESP_LOGI(TAG, "No Enough Memory");
+                    cJSON_Delete(property);
+                    continue;
+                }
+                cJSON *dup_value = cJSON_Duplicate(value, 1);
+
+                cJSON_AddItemToObject(response_root, "LocalTimer", dup_value);
+                cJSON_Delete(property);
+                //example_free(local_timer_str);
+				HAL_Free(local_timer_str);
+            } else {
+                cJSON *array = cJSON_CreateArray();
+                cJSON_AddItemToObject(response_root, "LocalTimer", array);
+            }
+        } 
+		if (strcmp("CountDownList", item_propertyid->valuestring) == 0) {
+            char *count_down_list_str = NULL;
+
+            if (NULL != (count_down_list_str = timer_service_property_get("[\"CountDownList\"]"))) {
+                ESP_LOGI(TAG, "CountDownList %s", count_down_list_str);
+                cJSON *property = NULL, *value = NULL;
+
+                property = cJSON_Parse(count_down_list_str);
+                if (property == NULL) {
+                    ESP_LOGI(TAG, "No Enough Memory");
+                    continue;
+                }
+                value = cJSON_GetObjectItem(property, "CountDownList");
+                if (value == NULL) {
+                    ESP_LOGI(TAG, "No Enough Memory");
+                    cJSON_Delete(property);
+                    continue;
+                }
+                cJSON *dup_value = cJSON_Duplicate(value, 1);
+
+                cJSON_AddItemToObject(response_root, "CountDownList", dup_value);
+                cJSON_Delete(property);
+                //example_free(count_down_list_str);
+				HAL_Free(count_down_list_str);
+            } else {
+                cJSON_AddStringToObject(response_root, "CountDownList", "");
+            }
+        }
+#endif
+    }
+
+    cJSON_Delete(request_root);
+
+    *response = cJSON_PrintUnformatted(response_root);
+    if (*response == NULL) {
+        ESP_LOGI(TAG, "cJSON_PrintUnformatted Error");
+        cJSON_Delete(response_root);
+        return -1;
+    }
+    cJSON_Delete(response_root);
+    *response_len = strlen(*response);
+
+    ESP_LOGI(TAG, "Property Get Response: %s", *response);
     return SUCCESS_RETURN;
 }
 

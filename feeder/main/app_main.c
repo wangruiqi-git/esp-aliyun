@@ -38,7 +38,6 @@
 
 #include "hal_key.h"
 #include "transport_uart.h"
-#include "alilocaltime.h"
 
 #include "hal_DS1302.h"
 #include "freertos/timers.h"
@@ -46,12 +45,24 @@
 #include "hal_led.h"
 #include "hal_ir.h"
 
-//wrq shan
-#include "cron_paras.h"
+#include "product_config.h"
+
+#include "iot_export_timer.h"
+
 
 static const char *TAG = "app main";
 
 static bool linkkit_started = false;
+
+#ifdef CONFIG_AOS_TIMER_SERVICE
+#define NUM_OF_PROPERTYS 1 /* <=30 dont add timer property */
+const char *control_targets_list[NUM_OF_PROPERTYS] = {"manualFeeding"};
+static int num_of_tsl_type[NUM_OF_TSL_TYPES] = {1, 0, 0}; /* 1:int/enum/bool; 2:float/double; 3:text/date */
+#define NUM_OF_COUNTDOWN_LIST_TARGET 1  /* <=10 */
+const char *countdownlist_target_list[NUM_OF_COUNTDOWN_LIST_TARGET] = {"manualFeeding"};
+#define NUM_OF_LOCAL_TIMER_TARGET 1  /* <=5 */
+const char *localtimer_target_list[NUM_OF_LOCAL_TIMER_TARGET] = {"manualFeeding"};
+#endif
 
 static esp_err_t wifi_event_handle(void *ctx, system_event_t *event)
 {
@@ -192,10 +203,34 @@ void user_key_handle(uint8_t event)
 	factory_restore_handle_butten();
 
 }
+
+#ifdef CONFIG_AOS_TIMER_SERVICE
+static void timer_service_cb(const char *report_data, const char *property_name, int i_value,
+                             double d_value, const char * s_value, int prop_idx)
+{
+    if (prop_idx >= NUM_OF_CONTROL_TARGETS){
+        ESP_LOGI(TAG, "ERROR: prop_idx=%d is out of limit=%d", prop_idx, NUM_OF_CONTROL_TARGETS);
+    }
+    if (property_name != NULL){    /* set value to device */
+        ESP_LOGI(TAG, "timer event callback: property_name=%s prop_idx=%d, i_value=%d",
+					property_name, prop_idx, i_value);
+		motorControl_timer(5, i_value);
+    }
+    return;
+}
+#endif
+
+static int user_connected_event_handler(void)
+{
+    return 0;
+}
+
+
 void printtest( TimerHandle_t xTimer )
 {
 
 }
+
 
 void app_main()
 {
@@ -211,8 +246,6 @@ void app_main()
     iotx_event_regist_cb(linkkit_event_monitor);    // awss callback
 
     IOT_SetLogLevel(IOT_LOG_INFO);
-	
-	ali_localtime_init();
 
 	ds1302_gpio_init();
 	ds1302_syn_systime(1);
@@ -236,5 +269,12 @@ void app_main()
 						/* 回调函数 */
 						printtest);
     xTimerStart(testtimmer,pdMS_TO_TICKS(1000));
+
+#ifdef CONFIG_AOS_TIMER_SERVICE
+	int ret = timer_service_init( control_targets_list, NUM_OF_PROPERTYS,
+						countdownlist_target_list,	NUM_OF_COUNTDOWN_LIST_TARGET,
+						localtimer_target_list,NUM_OF_LOCAL_TIMER_TARGET,
+						timer_service_cb, num_of_tsl_type, user_connected_event_handler );
+#endif
 
 }

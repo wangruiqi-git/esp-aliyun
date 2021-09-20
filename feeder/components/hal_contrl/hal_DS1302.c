@@ -414,6 +414,8 @@ bool ds1302_syn_systime(bool bdirection)
 	if(bdirection)//from ds1302
 	{
 		extern int settimeofday(const struct timeval* tv, const struct timezone* tz);
+		char strftime_buf[64];
+		struct timeval tv = {0};
 
 		ds1302_read_time(&lcTime,1);//获取时钟的时间
 		timeinfo.tm_year=lcTime.tm_year+2000-1900;
@@ -423,17 +425,14 @@ bool ds1302_syn_systime(bool bdirection)
 		timeinfo.tm_min=lcTime.tm_min;
 		timeinfo.tm_sec=lcTime.tm_sec;
 		
-		now = mktime(&timeinfo);
-
-		struct timeval tv = { .tv_sec = now, .tv_usec = 0 }; \
-    	settimeofday(&tv, NULL);
 		setenv("TZ", "CST-8", 1);
 		tzset();
+		now = mktime(&timeinfo);
+		tv.tv_sec = now;
+    	settimeofday(&tv, NULL);
 
-
-		char strftime_buf[64];
 		strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-		ESP_LOGI(TAG, "GET date/time FROM DS1302 is: %s", strftime_buf);
+		ESP_LOGI(TAG, "GET date/time FROM DS1302 is: %s ,stamp:%ld", strftime_buf, now);
 		
 	}
 	else//to ds1302
@@ -448,6 +447,9 @@ bool ds1302_syn_systime(bool bdirection)
 		lcTime.tm_min  =timeinfo.tm_min;
 		lcTime.tm_sec  =timeinfo.tm_sec;
 		ds1302_set_time(&lcTime,1);
+		char strftime_buf[64];
+		strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+		ESP_LOGI(TAG, "date/time TO DS1302 is: %s ,stamp:%ld", strftime_buf, now);
 	}
 return true;
 }
