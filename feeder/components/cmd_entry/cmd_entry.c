@@ -129,7 +129,7 @@ void app_get_input_param(char *param, size_t param_len)
         app_get_config_input_len(input, &len);
         strncpy(buf, input, len);
         ESP_LOGI(TAG, "LEDTEST: %s", buf);
-		int mode = atoi(buf);
+		uint8_t mode = atoi(buf);
 		led_work_mode_set(mode);
 
         return;

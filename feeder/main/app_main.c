@@ -23,6 +23,7 @@
  */
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp8266/rom_functions.h"
 
 #include "esp_err.h"
 #include "esp_event.h"
@@ -63,6 +64,14 @@ const char *countdownlist_target_list[NUM_OF_COUNTDOWN_LIST_TARGET] = {"manualFe
 #define NUM_OF_LOCAL_TIMER_TARGET 1  /* <=5 */
 const char *localtimer_target_list[NUM_OF_LOCAL_TIMER_TARGET] = {"manualFeeding"};
 #endif
+
+uint32_t Rhythmbit1[2]={200,2800};/*亮灭*/
+uint32_t Rhythmbit2[4]={200,200,200,2400};/*亮灭亮灭*/
+uint32_t Rhythmbit3[6]={200,200,200,200,200,2000};
+Rhythm_t led_config[3]={{Rhythmbit1, 2, 0},
+						{Rhythmbit2, 4, 0},
+						{Rhythmbit3, 6, 0}};
+
 
 static esp_err_t wifi_event_handle(void *ctx, system_event_t *event)
 {
@@ -200,8 +209,11 @@ static void linkkit_event_monitor(int event)
 void user_key_handle(uint8_t event)
 {
 	ESP_LOGI(TAG, "user_key_handle %d",event);
-	factory_restore_handle_butten();
-
+	if(KEY_GPIO_L_PRESS_EVT == event)
+	{
+		factory_restore_handle_butten();
+		rom_software_reboot();
+	}
 }
 
 #ifdef CONFIG_AOS_TIMER_SERVICE
@@ -250,7 +262,7 @@ void app_main()
 	ds1302_gpio_init();
 	ds1302_syn_systime(1);
 
-	led_gpio_init(NULL,0);
+	led_gpio_init(led_config,3);
 	
 	ir_gpio_init();
 

@@ -21,8 +21,9 @@
 
 typedef struct Rhythm
 {
-	uint32_t Rhythmbit[2];
-	uint8_t work_mode;
+	uint32_t *Rhythmbit;
+	uint8_t RhythmNum;
+	uint8_t RhythmPos;
 } Rhythm_t;
 
 //初始化引脚,移植其它单片机请替换内部函数

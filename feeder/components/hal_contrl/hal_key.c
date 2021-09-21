@@ -64,10 +64,10 @@ static void key_poll_func(void *arg)
 		//获取按下到松开的间隔时间
 		extern uint32_t esp_get_time(void);
 		diff = esp_get_time() - elink_time;
-		if (diff > 6000000) { /*long long press */
+		if (diff > 6000000) { /*long long press 6s*/
 			elink_time = 0;
 			events = KEY_GPIO_LL_PRESS_EVT;
-		} else if (diff > 2000000) { /* long press */
+		} else if (diff > 2000000) { /* long press 2s*/
 			elink_time = 0;
 			events = KEY_GPIO_L_PRESS_EVT;
 		} else if (diff > 40000) { /* short press */
