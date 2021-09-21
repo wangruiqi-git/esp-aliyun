@@ -65,13 +65,21 @@ const char *countdownlist_target_list[NUM_OF_COUNTDOWN_LIST_TARGET] = {"manualFe
 const char *localtimer_target_list[NUM_OF_LOCAL_TIMER_TARGET] = {"manualFeeding"};
 #endif
 
-uint32_t Rhythmbit1[2]={200,2800};/*亮灭*/
-uint32_t Rhythmbit2[4]={200,200,200,2400};/*亮灭亮灭*/
-uint32_t Rhythmbit3[6]={200,200,200,200,200,2000};
-Rhythm_t led_config[3]={{Rhythmbit1, 2, 0},
-						{Rhythmbit2, 4, 0},
-						{Rhythmbit3, 6, 0}};
+#define  LEDTYPE_NUM 4
+#define  NORMAL_MODE 0
+#define  AWSS_START 1
+#define  OFFLINE_MODE 2
+#define  OFFLINE_ERR_MODE 3
+uint32_t Rhythmbit1[4]={200,200,200,9400};        /*工作模式*/
+uint32_t Rhythmbit2[2]={1200,200};                 /*配网*/
+uint32_t Rhythmbit3[4]={200,9800};                /*离线工作*/
+uint32_t Rhythmbit4[2]={200,200};                 /*离线工作无配置*/
+Rhythm_t led_config[LEDTYPE_NUM]={{Rhythmbit1, 4, 0},
+                                  {Rhythmbit2, 2, 0},
+                                  {Rhythmbit3, 4, 0},
+                                  {Rhythmbit4, 2, 0}};
 
+void user_led_work_mode_set(uint8_t new_working_mode);
 
 static esp_err_t wifi_event_handle(void *ctx, system_event_t *event)
 {
@@ -96,6 +104,7 @@ static void linkkit_event_monitor(int event)
         case IOTX_AWSS_START: // AWSS start without enbale, just supports device discover
             // operate led to indicate user
             ESP_LOGI(TAG, "IOTX_AWSS_START");
+			user_led_work_mode_set(AWSS_START);
             break;
 
         case IOTX_AWSS_ENABLE: // AWSS enable, AWSS doesn't parse awss packet until AWSS is enabled.
@@ -194,6 +203,7 @@ static void linkkit_event_monitor(int event)
         case IOTX_CONN_CLOUD_SUC: // Device connects cloud successfully
             ESP_LOGI(TAG, "IOTX_CONN_CLOUD_SUC");
             // operate led to indicate user
+            user_led_work_mode_set(NORMAL_MODE);
             break;
 
         case IOTX_RESET: // Linkkit reset success (just got reset response from
@@ -232,8 +242,10 @@ static void timer_service_cb(const char *report_data, const char *property_name,
 }
 #endif
 
-static int user_connected_event_handler(void)
+static int user_ntp_event_callback(int readlen)
 {
+	if(readlen == 0)
+		user_led_work_mode_set(OFFLINE_ERR_MODE);
     return 0;
 }
 
@@ -243,10 +255,27 @@ void printtest( TimerHandle_t xTimer )
 
 }
 
+void user_led_work_mode_set(uint8_t new_working_mode)
+{
+	uint8_t old_working_mode;
+	led_work_mode_get(&old_working_mode);
+	ESP_LOGI(TAG, "old:%d,new:%d", old_working_mode,new_working_mode);
+	if (new_working_mode == AWSS_START)
+	{
+		led_work_mode_set(new_working_mode);
+		return;
+	}
+	if(old_working_mode==OFFLINE_ERR_MODE )
+	{
+		return;
+	}
+	led_work_mode_set(new_working_mode);
+}
 
 void app_main()
 {
     //factory_restore_init();
+	bool ret=false;
 
     motorInit();
 	key_gpio_init(user_key_handle);
@@ -258,11 +287,14 @@ void app_main()
     iotx_event_regist_cb(linkkit_event_monitor);    // awss callback
 
     IOT_SetLogLevel(IOT_LOG_INFO);
+	
+	led_gpio_init(led_config,LEDTYPE_NUM);
+	user_led_work_mode_set(OFFLINE_MODE);
 
 	ds1302_gpio_init();
-	ds1302_syn_systime(1);
-
-	led_gpio_init(led_config,3);
+	ret = ds1302_syn_systime(1);
+    if(ret == false)
+		user_led_work_mode_set(OFFLINE_ERR_MODE);
 	
 	ir_gpio_init();
 
@@ -283,10 +315,11 @@ void app_main()
     xTimerStart(testtimmer,pdMS_TO_TICKS(1000));
 
 #ifdef CONFIG_AOS_TIMER_SERVICE
-	int ret = timer_service_init( control_targets_list, NUM_OF_PROPERTYS,
+	int tm_ret = timer_service_init( control_targets_list, NUM_OF_PROPERTYS,
 						countdownlist_target_list,	NUM_OF_COUNTDOWN_LIST_TARGET,
 						localtimer_target_list,NUM_OF_LOCAL_TIMER_TARGET,
-						timer_service_cb, num_of_tsl_type, user_connected_event_handler );
+						timer_service_cb, num_of_tsl_type, user_ntp_event_callback
+						);
 #endif
 
 }

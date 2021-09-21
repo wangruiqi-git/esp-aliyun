@@ -35,7 +35,7 @@ void timer_service_clear(void);
 
 typedef void (*callback_fun)(const char *report_data, const char *property_name, int i_value, 
 							 double d_value, const char * s_value, int prop_idx);
-typedef void (*callback_ntp_fun)();
+typedef void (*callback_ntp_fun)(int);
 
 int timer_service_init(const char **control_list, uint8_t num_control_list, 
                                     const char **countdownlist_target, uint8_t num_countdownlist_target, 

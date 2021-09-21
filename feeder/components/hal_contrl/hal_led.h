@@ -34,6 +34,8 @@ void led_on(void);
 void led_off(void);
 void led_level(uint8_t   level);
 
+void led_work_mode_get(uint8_t* n_working_mode);
+
 void led_work_mode_set(uint8_t  n_working_mode);
 
 #endif /* APP_INCLUDE_DRIVER_LED_H_ */

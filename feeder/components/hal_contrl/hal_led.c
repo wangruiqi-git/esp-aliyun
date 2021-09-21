@@ -81,7 +81,6 @@ void led_level(uint8_t   level)
 
 void led_timer_handler( TimerHandle_t xTimer )
 {
-	ESP_LOGI(TAG, "led_timer_handler");
 	uint8_t pos=0;
 	uint8_t num =0;
 	uint32_t Rhythmbit=0;
@@ -102,6 +101,11 @@ void led_timer_handler( TimerHandle_t xTimer )
 						pdMS_TO_TICKS(Rhythmbit),
 						pdMS_TO_TICKS(50));
 	xTimerStart(xTimer,pdMS_TO_TICKS(50));
+}
+
+void led_work_mode_get(uint8_t* n_working_mode)
+{
+	*n_working_mode = working_mode;
 }
 
 void led_work_mode_set(uint8_t      n_working_mode)

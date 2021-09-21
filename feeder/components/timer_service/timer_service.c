@@ -1085,7 +1085,8 @@ void timer_service_ntp_update()
     // EXAMPLE_TRACE("utc=%s,ntp_time_s=%d  utc_week_offset=%d \n", str, ntp_time_s, utc);
     TS_INFO("ntp_time_s=%d  utc_week_offset=%d \n", ntp_time_s, utc);
 
-    int i, ret;
+    int i;
+	int ret=-1;
 #ifdef CONFIG_ENABLE_PERIOD_TIMER
     if ( g_need_read_kv == 0) {
         memset(&g_period_timer, 0, sizeof(g_period_timer));
@@ -1150,7 +1151,7 @@ void timer_service_ntp_update()
             // EXAMPLE_TRACE("get kv localtimer, ret=%d!", ret); 
             TS_INFO("TS_get kv localtimer, ret=%d!", ret); 
             if (ret > 0){
-                local_timer_parse(str, 0);
+                 local_timer_parse(str, 0);
             }
             HAL_Free(str);
         }
@@ -1158,7 +1159,7 @@ void timer_service_ntp_update()
 #endif
     g_need_read_kv = 1;
     if (g_timer_service_ntp_cb != NULL)
-        g_timer_service_ntp_cb();
+        g_timer_service_ntp_cb(ret);
     g_timer_service_ntp_cb = NULL;
 }
 

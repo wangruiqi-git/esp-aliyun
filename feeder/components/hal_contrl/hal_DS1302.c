@@ -424,7 +424,11 @@ bool ds1302_syn_systime(bool bdirection)
 		timeinfo.tm_hour=lcTime.tm_hour;
 		timeinfo.tm_min=lcTime.tm_min;
 		timeinfo.tm_sec=lcTime.tm_sec;
-		
+		if(timeinfo.tm_year < 2021-1900)
+		{
+			ESP_LOGI(TAG, "GET date/time FROM DS1302 ERR");
+			return false;
+		}
 		setenv("TZ", "CST-8", 1);
 		tzset();
 		now = mktime(&timeinfo);
